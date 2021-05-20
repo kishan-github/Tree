@@ -1,79 +1,118 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct node
-{
-	int data;
-	struct node* left;
-	struct node* right;
+typedef struct node {
+    int data;
+    struct node* left;
+    struct node* right;
 }node_t;
 
-node_t* createNode(int data)
+node_t* delete(node_t* root, int data)
 {
-	node_t* temp_node = NULL;
-	
-	temp_node = malloc(sizeof(node_t));
-	if(NULL == temp_node)
-	{
-		printf("ERROR : Memory allocation failed\n");
-		return NULL;
-	}
-	
-	temp_node->data = data;
-	temp_node->left = temp_node->right = NULL;
-	
-	return temp_node;
-}
+	if(root == NULL)
+		return root;
 
-void addElement(node_t** root, int data)
-{
-	if(NULL == *root)
+	if(data < root->data)
 	{
-		*root = createNode(data);
-		return;
+		root->left = delete(root->left, data);
+		return root;
 	}
-	
-	node_t* temp_node = *root;
-	node_t* prev_node = NULL;
-	
-	while(temp_node)
+	else if(data > root->data)
 	{
-		prev_node = temp_node;
-		if(data < temp_node->data)
-			temp_node = temp_node->left;
+		root->right = delete(root->right, data);
+		return root;
+	}
+
+		// element found at this node.
+		if(root->left == NULL)
+		{
+			node_t* temp = root->right;
+			free(root);
+			return temp;
+		}
+		if(root->right == NULL)
+		{
+			node_t* temp = root->left;
+			free(root);
+			return temp;
+		}
+		// node have both child.
+		node_t* parent = root;
+		node_t* succ = root->right;
+		
+		while(succ->left != NULL)
+		{
+			parent = succ;
+			succ = succ->left;
+		}
+		
+		if(root != parent)
+			parent->left = succ->right;
 		else
-			temp_node = temp_node->right;
-	}
+			parent->right = succ->right;
+		
+		root->data = succ->data;
+		
+		free(succ);
 	
-	if(data < prev_node->data)
-		prev_node->left = createNode(data);
-	else
-		prev_node->right = createNode(data);
+	return root;
 }
 
-void inOrderTraversal(node_t* node)
+node_t* create(int data)
 {
-	if(NULL == node)
+    node_t* temp;
+    
+    temp = malloc(sizeof(node_t));
+    
+    temp->data = data;
+    temp->left = temp->right = NULL;
+    
+    return temp;
+}
+
+node_t* add(node_t* root, int data)
+{
+	if(root == NULL)
+		return create(data);
+	
+	if(data < root->data)
+		root->left = add(root->left, data);
+	else
+		root->right = add(root->right, data);
+    
+	return root;
+}
+
+void display(node_t* root)
+{
+	if(root == NULL)
 		return;
 	
-	inOrderTraversal(node->left);
-	printf("%d\t", node->data);
-	inOrderTraversal(node->right);
+	display(root->left);
+	printf("%d\t", root->data);
+	display(root->right);
 }
 
 int main()
 {
-	node_t* root = NULL;
+    node_t* root = NULL;
+    
+    root = add(root, 10);
+	root = add(root, 5);
+	root = add(root, 3);
+	root = add(root, 7);
+	add(root, 15);
+	add(root, 13);
+	add(root, 17);
+	add(root, 2);
+	add(root, 1);
+	add(root, 4);
+
+	display(root);
 	
-	addElement(&root, 10);
-	addElement(&root, 2);
-	addElement(&root, 5);
-	addElement(&root, 12);
-	addElement(&root, 3);
-	addElement(&root, 11);
-	addElement(&root, 1);
+	root = delete(root, 1);
 	
-	inOrderTraversal(root);
-	
-	return 0;
+	display(root);
+
+    return 0;
 }
